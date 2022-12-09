@@ -41,12 +41,18 @@ async function main() {
 	console.log(`- Executing the caller contract...\n`);
 
 	// Execute the contract
-	const contractExecuteRec = await contracts.executeContractFcn(callerContractId, "counterIncrement", gasLim, client);
-	console.log(`- Contract execution: ${contractExecuteRec.receipt.status} \n`);
-
+	const incrementRec = await contracts.executeContractFcn(callerContractId, "counterIncrement", gasLim, client);
+	console.log(`- Contract execution: ${incrementRec.receipt.status} \n`);
 	// Check a Mirror Node Explorer
-	const [randNumInfo, randNumExpUrl] = await queries.mirrorTxQueryFcn(contractExecuteRec, network);
-	console.log(`\n- See details in mirror node explorer: \n${randNumExpUrl}`);
+	const [incrementInfo, incrementExpUrl] = await queries.mirrorTxQueryFcn(incrementRec, network);
+	console.log(`\n- See details in mirror node explorer: \n${incrementExpUrl}`);
+
+	// Execute the contract
+	const countResultRec = await contracts.executeContractFcn(callerContractId, "getCount", gasLim, client);
+	console.log(`- Contract execution: ${countResultRec.receipt.status} \n`);
+	// Check a Mirror Node Explorer
+	const [countInfo, countExpUrl] = await queries.mirrorTxQueryFcn(countResultRec, network);
+	console.log(`\n- See details in mirror node explorer: \n${countExpUrl}`);
 
 	console.log(`
 ====================================================
