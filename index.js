@@ -1,17 +1,18 @@
 console.clear();
 import { Client, AccountId, PrivateKey, Hbar, ContractFunctionParameters } from "@hashgraph/sdk";
 
-import dotenv from "dotenv";
-dotenv.config();
-
 import * as queries from "./utils/queries.js";
 import * as contracts from "./utils/contractOperations.js";
 import counterContract from "./contracts/Counter.json" assert { type: "json" };
 import counterCallerContract from "./contracts/CounterCaller.json" assert { type: "json" };
 
+import dotenv from "dotenv";
+dotenv.config();
+
 const operatorId = AccountId.fromString(process.env.OPERATOR_ID);
 const operatorKey = PrivateKey.fromString(process.env.OPERATOR_PVKEY);
 const network = process.env.HEDERA_NETWORK;
+
 const client = Client.forNetwork(network).setOperator(operatorId, operatorKey);
 client.setDefaultMaxTransactionFee(new Hbar(1000));
 client.setMaxQueryPayment(new Hbar(50));
@@ -40,19 +41,18 @@ async function main() {
 	console.log(`\nSTEP 2 ===================================\n`);
 	console.log(`- Executing the caller contract...\n`);
 
-	// Execute the contract
-	const incrementRec = await contracts.executeContractFcn(callerContractId, "counterIncrement", gasLim, client);
-	console.log(`- Contract execution: ${incrementRec.receipt.status} \n`);
-	// Check a Mirror Node Explorer
-	const [incrementInfo, incrementExpUrl] = await queries.mirrorTxQueryFcn(incrementRec, network);
-	console.log(`\n- See details in mirror node explorer: \n${incrementExpUrl}`);
+	let idx = 0;
+	const runs = 3;
+	const incrementRec = [];
+	for (idx; idx < runs; idx++) {
+		// Execute the caller contract
+		incrementRec[idx] = await contracts.executeContractFcn(callerContractId, "counterIncrement", gasLim, client);
+		console.log(`- Contract execution: ${incrementRec[idx].receipt.status} \n`);
+	}
 
-	// Execute the contract
-	const countResultRec = await contracts.executeContractFcn(callerContractId, "getCount", gasLim, client);
-	console.log(`- Contract execution: ${countResultRec.receipt.status} \n`);
-	// Check a Mirror Node Explorer
-	const [countInfo, countExpUrl] = await queries.mirrorTxQueryFcn(countResultRec, network);
-	console.log(`\n- See details in mirror node explorer: \n${countExpUrl}`);
+	// Check a Mirror Node Explorer for the last contract execution
+	const [incrementInfo, incrementExpUrl] = await queries.mirrorTxQueryFcn(incrementRec[runs - 1], network);
+	console.log(`- See details in mirror node explorer: \n${incrementExpUrl}`);
 
 	console.log(`
 ====================================================
